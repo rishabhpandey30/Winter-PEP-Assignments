@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Smart Study Planner</title>
+
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+    <div class="logo">
+        <div class="logo-box">SP</div>
+        <h2>Smart Study Planner</h2>
+    </div>
+
+    <button onclick="toggleTheme()" class="theme-btn">
+        🌙
+    </button>
+</header>
+
+
+<div class="container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <button onclick="navigate('dashboard')">Dashboard</button>
+        <button onclick="navigate('subjects')">Subjects</button>
+        <button onclick="navigate('schedule')">Schedule</button>
+        <button onclick="navigate('tasks')">Tasks</button>
+        <button onclick="navigate('analytics')">Analytics</button>
+        <button onclick="navigate('settings')">Settings</button>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main id="app"></main>
+
+</div>
+
+<script src="storage.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
