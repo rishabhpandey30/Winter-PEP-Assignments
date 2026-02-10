@@ -84,6 +84,7 @@ body{
     border-right:1px solid #e8ecf1;
     padding:24px 16px;
     box-shadow:0 2px 8px rgba(15,23,42,0.03);
+    overflow-y:auto;
 }
 
 .sidebar button{
@@ -98,7 +99,7 @@ body{
     font-weight:700;
     color:#475569;
     transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-bottom:8px;
+    margin-bottom:10px;
     letter-spacing:0.2px;
 }
 
@@ -113,14 +114,16 @@ body{
 
 main{
     flex:1;
-    padding:40px;
+    padding:48px 40px;
+    overflow-y:auto;
+    max-height:calc(100vh - 70px);
 }
 
 main h1{
     color:#0f172a;
     font-size:34px;
     font-weight:800;
-    margin-bottom:32px;
+    margin-bottom:40px;
     letter-spacing:-0.5px;
 }
 
@@ -128,19 +131,24 @@ main h1{
 
 .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:28px;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:32px;
+    margin-bottom:32px;
 }
 
 /* CARDS */
 
 .card{
     background:white;
-    padding:28px;
+    padding:32px;
     border-radius:16px;
     border:1px solid #e8ecf1;
     box-shadow:0 2px 8px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.08);
     transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display:flex;
+    flex-direction:column;
+    min-height:fit-content;
+    margin-top: 15px;
 }
 
 .card:hover{
@@ -153,7 +161,7 @@ main h1{
     font-size:36px;
     font-weight:800;
     color:#0f172a;
-    margin:0;
+    margin:0 0 8px 0;
     letter-spacing:-0.5px;
 }
 
@@ -161,14 +169,14 @@ main h1{
     font-size:22px;
     font-weight:700;
     color:#1e293b;
-    margin-bottom:20px;
+    margin:0 0 20px 0;
     letter-spacing:-0.3px;
 }
 
 .card h3{
     color:#475569;
     font-weight:700;
-    margin-bottom:16px;
+    margin:0 0 16px 0;
     font-size:15px;
     letter-spacing:0.3px;
     text-transform:uppercase;
@@ -229,7 +237,7 @@ main h1{
 /* BIG CARDS */
 
 .big-card{
-    margin-top:25px;
+    margin-top:32px;
 }
 
 /* BUTTONS */
@@ -371,12 +379,13 @@ button[onclick*="deleteSubject"]:hover{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    padding:16px;
+    padding:18px;
     border:2px solid #e2e8f0;
     border-radius:12px;
-    margin:12px 0;
+    margin:14px 0;
     transition:all 0.3s ease;
     background:white;
+    min-height:70px;
 }
 
 .dark .list{
@@ -460,7 +469,7 @@ button[onclick*="deleteSubject"]:hover{
     background:#e2e8f0;
     border-radius:12px;
     height:28px;
-    margin:12px 0;
+    margin:16px 0;
     overflow:hidden;
     box-shadow:inset 0 2px 4px rgba(15,23,42,0.05);
 }
@@ -547,4 +556,14 @@ label{
 input[type="file"]{
     padding:10px;
     cursor:pointer;
+}
+
+/* CHARTS */
+
+canvas{
+    max-width:100%;
+}
+
+.dark canvas{
+    filter:invert(0.93);
 }

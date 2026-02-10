@@ -1,5 +1,8 @@
 navigate('dashboard');
-applyTheme();   
+applyTheme();
+
+// Store chart instances
+let chartsInstance = {};   
 
 function card(title,content){
     return `
@@ -139,8 +142,8 @@ function subjects(){
                     </div>
 
                     <div>
-                        <button onclick="editSubject(${i})">✏️</button>
-                        <button onclick="deleteSubject(${i})">❌</button>
+                        <button onclick="editSubject(${i})">Edit</button>
+                        <button onclick="deleteSubject(${i})">Delete</button>
                     </div>
                 </div>
             `).join('')
@@ -234,11 +237,11 @@ function tasks(){
 
                         <div>
                             <button onclick="toggleTask(${i})">
-                                ${task.completed?'✅':'✔'}
+                                ${task.completed?'Completed':'Pending'}
                             </button>
 
                             <button onclick="deleteTask(${i})">
-                                ❌
+                                Delete
                             </button>
                         </div>
 
@@ -387,7 +390,7 @@ function buildScheduleTable(slots){
                         <td>${slot.start} - ${slot.end}</td>
                         <td>
                             <button onclick="deleteSlot(${slots.indexOf(slot)})">
-                                ❌
+                                Delete
                             </button>
                         </td>
                     </tr>
@@ -426,7 +429,7 @@ function addSlot(){
     );
 
     if(conflict){
-        return alert("⚠️ Time conflict detected!");
+        return alert(" Time conflict detected!");
     }
 
     slots.push({subject, day, start, end});
@@ -480,56 +483,252 @@ function analytics(){
     document.getElementById('app').innerHTML = `
         <h1>Progress Analytics</h1>
 
-        ${card('Completion Rate',`
-
-            <div class="progress">
-                <div class="bar"
-                     style="width:${percent}%">
-                     ${percent}%
+        <div class="grid">
+            <div class="card">
+                <h2>Completion Rate</h2>
+                <div style="position:relative;height:300px;">
+                    <canvas id="completionChart"></canvas>
                 </div>
             </div>
 
-        `)}
+            <div class="card">
+                <h2>Task Distribution</h2>
+                <div style="position:relative;height:300px;">
+                    <canvas id="typesChart"></canvas>
+                </div>
+            </div>
+        </div>
 
-        ${card('Task Breakdown',`
-
-            <p>Assignments: ${assignments}</p>
-            <div class="progress">
-                <div class="bar"
-                     style="width:${assignments/tasks.length*100}%">
+        <div class="grid">
+            <div class="card">
+                <h2>Task Completion Status</h2>
+                <div style="position:relative;height:300px;">
+                    <canvas id="statusChart"></canvas>
                 </div>
             </div>
 
-            <p>Exams: ${exams}</p>
-            <div class="progress">
-                <div class="bar"
-                     style="width:${exams/tasks.length*100}%">
+            <div class="card">
+                <h2>Quick Stats</h2>
+                <div style="padding:20px 0;">
+                    <div style="margin:16px 0;display:flex;justify-content:space-between;align-items:center;padding:14px;background:#f8fafc;border-radius:10px;">
+                        <span style="color:#475569;font-weight:700;">Total Tasks</span>
+                        <span style="color:#6366f1;font-weight:800;font-size:24px;">${tasks.length}</span>
+                    </div>
+                    <div style="margin:16px 0;display:flex;justify-content:space-between;align-items:center;padding:14px;background:#f0fdf4;border-radius:10px;">
+                        <span style="color:#475569;font-weight:700;">Completed</span>
+                        <span style="color:#059669;font-weight:800;font-size:24px;">${completed}</span>
+                    </div>
+                    <div style="margin:16px 0;display:flex;justify-content:space-between;align-items:center;padding:14px;background:#fef2f2;border-radius:10px;">
+                        <span style="color:#475569;font-weight:700;">Pending</span>
+                        <span style="color:#dc2626;font-weight:800;font-size:24px;">${tasks.length - completed}</span>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <p>Study: ${study}</p>
-            <div class="progress">
-                <div class="bar"
-                     style="width:${study/tasks.length*100}%">
+        <div class="card">
+            <h2>Statistics Summary</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:20px;margin-top:20px;">
+                <div style="text-align:center;padding:20px;background:#eef2ff;border-radius:12px;">
+                    <p style="color:#6b7280;font-size:14px;margin-bottom:8px;">Assignments</p>
+                    <p style="color:#6366f1;font-size:28px;font-weight:800;">${assignments}</p>
+                </div>
+                <div style="text-align:center;padding:20px;background:#fef3c7;border-radius:12px;opacity:0.9;">
+                    <p style="color:#6b7280;font-size:14px;margin-bottom:8px;">Exams</p>
+                    <p style="color:#d97706;font-size:28px;font-weight:800;">${exams}</p>
+                </div>
+                <div style="text-align:center;padding:20px;background:#d1fae5;border-radius:12px;opacity:0.9;">
+                    <p style="color:#6b7280;font-size:14px;margin-bottom:8px;">Study</p>
+                    <p style="color:#059669;font-size:28px;font-weight:800;">${study}</p>
                 </div>
             </div>
-
-        `)}
-
-        ${card('Insight',`
-
-            <h3>
-                ${
-                    percent > 75
-                    ? "Excellent productivity!"
-                    : percent > 40
-                    ? " Good — keep improving."
-                    : " You need better planning."
-                }
-            </h3>
-
-        `)}
+        </div>
     `;
+
+    // Destroy previous charts if they exist
+    if(chartsInstance.completion) chartsInstance.completion.destroy();
+    if(chartsInstance.types) chartsInstance.types.destroy();
+    if(chartsInstance.status) chartsInstance.status.destroy();
+
+    // Create Completion Rate Doughnut Chart
+    setTimeout(() => {
+        const completionCtx = document.getElementById('completionChart');
+        if(completionCtx){
+            chartsInstance.completion = new Chart(completionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Pending'],
+                    datasets: [{
+                        data: [completed, tasks.length - completed],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderColor: ['#059669', '#dc2626'],
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { weight: '700', size: 14 },
+                                padding: 16,
+                                color: '#475569'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }, 0);
+
+    // Create Task Types Bar Chart
+    setTimeout(() => {
+        const typesCtx = document.getElementById('typesChart');
+        if(typesCtx){
+            chartsInstance.types = new Chart(typesCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Assignments', 'Exams', 'Study'],
+                    datasets: [{
+                        label: 'Task Count',
+                        data: [assignments, exams, study],
+                        backgroundColor: [
+                            '#6366f1',
+                            '#f59e0b',
+                            '#10b981'
+                        ],
+                        borderColor: [
+                            '#4f46e5',
+                            '#d97706',
+                            '#059669'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: { weight: '700', size: 14 },
+                                color: '#475569'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                font: { weight: '600' }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                font: { weight: '600' }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }, 0);
+
+    // Create Task Status Bar Chart
+    setTimeout(() => {
+        const statusCtx = document.getElementById('statusChart');
+        if(statusCtx){
+            const completedByType = {
+                assignments: tasks.filter(t => t.type === 'Assignment' && t.completed).length,
+                exams: tasks.filter(t => t.type === 'Exam' && t.completed).length,
+                study: tasks.filter(t => t.type === 'Study' && t.completed).length
+            };
+
+            chartsInstance.status = new Chart(statusCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Assignments', 'Exams', 'Study'],
+                    datasets: [
+                        {
+                            label: 'Completed',
+                            data: [completedByType.assignments, completedByType.exams, completedByType.study],
+                            backgroundColor: '#10b981',
+                            borderColor: '#059669',
+                            borderWidth: 2,
+                            borderRadius: 8
+                        },
+                        {
+                            label: 'Pending',
+                            data: [
+                                assignments - completedByType.assignments,
+                                exams - completedByType.exams,
+                                study - completedByType.study
+                            ],
+                            backgroundColor: '#ef4444',
+                            borderColor: '#dc2626',
+                            borderWidth: 2,
+                            borderRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { weight: '700', size: 14 },
+                                padding: 16,
+                                color: '#475569'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                font: { weight: '600' }
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                font: { weight: '600' }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }, 0);
 }
 
 /* SETTINGS */
