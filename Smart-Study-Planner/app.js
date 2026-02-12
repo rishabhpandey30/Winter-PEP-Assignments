@@ -793,12 +793,18 @@ function settings(){
     applyTheme();
 }
 
-/* THEME TOGGLE */
+/* THEME */
 
 function toggleTheme(){
 
     const prefs = JSON.parse(localStorage.getItem('prefs')) || {};
-
+    const themes = document.getElementById("theme")
+    if(prefs.theme=== "dark"){
+        themes.innerText = "☀️"
+    }
+    else{
+        themes.innerText = "🌙"
+    }
     prefs.theme =
         prefs.theme === 'dark'
         ? 'light'
